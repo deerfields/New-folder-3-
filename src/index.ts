@@ -161,7 +161,7 @@ class MallOSApplication {
         timestamp: new Date().toISOString(),
         version: config.app.version,
         environment: config.app.environment,
-        nodeEnv: process.env.NODE_ENV,
+        nodeEnv: process.env['NODE_ENV'],
         uptime: process.uptime(),
         memory: process.memoryUsage(),
         memoryPercent: (process.memoryUsage().heapUsed / process.memoryUsage().heapTotal) * 100,
@@ -231,7 +231,7 @@ class MallOSApplication {
         res.json({
           logVolume: count,
           recentLogs: recent,
-          retentionPolicy: process.env.AUDIT_RETENTION_DAYS || 90,
+          retentionPolicy: process.env['AUDIT_RETENTION_DAYS'] || 90,
           cleanupStatus: 'ok', // Placeholder
         });
       } catch (err) {
@@ -309,7 +309,7 @@ class MallOSApplication {
   private setupSocketIO(): void {
     // Authentication middleware for Socket.IO
     this.io.use((socket, next) => {
-      const token = socket.handshake.auth.token;
+      const token = socket.handshake.auth['token'];
       if (!token) {
         return next(new Error('Authentication error'));
       }
