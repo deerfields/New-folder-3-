@@ -97,7 +97,7 @@
     "node-cron": "^3.0.2",
     "node-schedule": "^2.1.1",
     "bull": "^4.11.3",
-    "prometheus-client": "^14.2.0",
+    "prom-client": "^15.1.3",
     "express-prometheus-middleware": "^1.2.0",
     "sentry-node": "^7.64.0",
     "newrelic": "^11.0.0",
