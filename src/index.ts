@@ -242,7 +242,7 @@ class MallOSApplication {
     // Prometheus metrics endpoint
     const collectDefaultMetrics = promClient.collectDefaultMetrics;
     collectDefaultMetrics();
-    this.app.get('/metrics', async (req, res) => {
+    this.app.get('/metrics', async (_req, res) => {
       res.set('Content-Type', promClient.register.contentType);
       res.end(await promClient.register.metrics());
     });
