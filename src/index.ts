@@ -16,7 +16,7 @@ import { databaseManager } from '@/config/database';
 import { redis } from '@/config/redis';
 import { iotService } from '@/services/IoTService';
 import { aiAnalyticsService } from '@/services/AIAnalyticsService';
-import { computerVisionService } from '@/services/ComputerVisionService';
+import { computerVisionService } from '@/services/ComputerVisionService.mock';
 import os from 'os';
 import { getRepository } from 'typeorm';
 import { AuditLog } from '@/models/AuditLog';
