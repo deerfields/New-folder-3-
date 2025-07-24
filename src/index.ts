@@ -155,7 +155,7 @@ class MallOSApplication {
     this.app.use(auditLog);
 
     // Health and metrics endpoints
-    this.app.get('/health', async (req, res) => {
+    this.app.get('/health', async (_req, res) => {
       res.json({
         status: 'healthy',
         timestamp: new Date().toISOString(),
