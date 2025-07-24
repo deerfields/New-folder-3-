@@ -1,8 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { database } from '../config/database';
-import { Notification } from '../models/Notification';
+import { Notification, NotificationStatus } from '../models/Notification';
 import { NotificationRecipient } from '../models/Notification';
 import { Tenant } from '../models/Tenant';
+import { UserRole } from '../models/User';
 import { authenticate, authorize } from '../middleware/auth';
 import { createNotificationRecipients } from '../models/Notification';
 
@@ -75,4 +76,4 @@ router.post('/:id/mark-read', authenticate, async (req: Request, res: Response) 
   }
 });
 
-export default router; 
+export default router;
