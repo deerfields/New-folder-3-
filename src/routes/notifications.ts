@@ -10,7 +10,7 @@ import { createNotificationRecipients } from '../models/Notification';
 const router = Router();
 
 // ایجاد اعلان جدید و ساخت recipients
-router.post('/', authenticate, authorize(['ADMIN', 'MALL_MANAGER']), async (req: Request, res: Response) => {
+router.post('/', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { title, body, type, recipients } = req.body;
     // ایجاد اعلان اصلی
