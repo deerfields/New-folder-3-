@@ -69,9 +69,9 @@ class MallOSApplication {
 
       logger.info('🚀 Initializing MallOS Enterprise Application...');
 
-      // Initialize database
-      await databaseManager.initialize();
-      logger.info('✅ Database initialized');
+      // Initialize database (disabled for development)
+      // await databaseManager.initialize();
+      logger.info('⚠️ Database disabled for development');
 
       // Initialize Redis (disabled for development)
       // await redis.connect();
@@ -336,7 +336,7 @@ class MallOSApplication {
       socket.on('subscribe-ai-predictions', (data) => {
         const { type } = data;
         socket.join(`ai-${type}`);
-        logger.info(`��� Client ${socket.id} subscribed to AI predictions: ${type}`);
+        logger.info(`🤖 Client ${socket.id} subscribed to AI predictions: ${type}`);
       });
 
       // Handle computer vision alerts subscriptions
