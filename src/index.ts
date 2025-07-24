@@ -54,7 +54,7 @@ class MallOSApplication {
     this.server = createServer(this.app);
     this.io = new Server(this.server, {
       cors: {
-        origin: config.app.corsOrigin,
+        origin: config.cors.origin,
         methods: ['GET', 'POST']
       }
     });
@@ -130,7 +130,7 @@ class MallOSApplication {
 
     // CORS
     this.app.use(cors({
-      origin: config.app.corsOrigin,
+      origin: config.cors.origin,
       credentials: true
     }));
 
@@ -516,4 +516,4 @@ app.start().catch((error) => {
   process.exit(1);
 });
 
-export default app; 
+export default app;
