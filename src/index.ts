@@ -223,7 +223,7 @@ class MallOSApplication {
       });
     });
 
-    this.app.get('/health/audit', async (req, res) => {
+    this.app.get('/health/audit', async (_req, res) => {
       try {
         const repo = getRepository(AuditLog);
         const count = await repo.count();
