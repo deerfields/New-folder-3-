@@ -206,7 +206,7 @@ class MallOSApplication {
           errorCount: 0, // Would need to be calculated from errors relation
         }));
         res.json({ integrations: statuses });
-      } catch (err) {
+      } catch (err: any) {
         res.status(500).json({ status: 'error', error: err.message });
       }
     });
@@ -467,7 +467,7 @@ class MallOSApplication {
 
       const port = config.app.port;
       this.server.listen(port, () => {
-        logger.info(`🚀 MallOS Enterprise Server running on port ${port}`);
+        logger.info(`��� MallOS Enterprise Server running on port ${port}`);
         logger.info(`📊 Environment: ${config.app.environment}`);
         logger.info(`🔗 API Documentation: http://localhost:${port}/api`);
         logger.info(`🏥 Health Check: http://localhost:${port}/health`);
