@@ -53,7 +53,7 @@ router.post(
   body('amount').isFloat({ gt: 0 }).withMessage('Amount must be positive'),
   body('currency').isIn(['AED', 'USD', 'EUR', 'GBP']).withMessage('Invalid currency'),
   body('customerId').isString().notEmpty(),
-  async (req: Request, res: Response) => {
+  async (req: Request & { user: any }, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
     try {
