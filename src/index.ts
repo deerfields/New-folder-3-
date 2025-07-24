@@ -192,7 +192,7 @@ class MallOSApplication {
       }
     });
 
-    this.app.get('/health/integrations', async (req, res) => {
+    this.app.get('/health/integrations', async (_req, res) => {
       try {
         const repo = getRepository(IntegrationConfig);
         const integrations = await repo.find();
