@@ -24,7 +24,7 @@ function handlePaymentError(res: Response, error: any) {
 }
 
 // Helper: Write audit log
-async function writeAuditLog(req, action, resource, resourceId, success, errorMessage) {
+async function writeAuditLog(req: any, action: string, resource: string, resourceId: string | null, success: boolean, errorMessage?: string) {
   const repo = getRepository(AuditLog);
   await repo.save({
     userId: req.user?.id,
@@ -53,7 +53,7 @@ router.post(
   body('amount').isFloat({ gt: 0 }).withMessage('Amount must be positive'),
   body('currency').isIn(['AED', 'USD', 'EUR', 'GBP']).withMessage('Invalid currency'),
   body('customerId').isString().notEmpty(),
-  async (req: Request, res: Response) => {
+  async (req: Request & { user: any }, res: Response) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
     try {
@@ -331,4 +331,4 @@ router.post(
   }
 );
 
-export default router; 
+export default router;
