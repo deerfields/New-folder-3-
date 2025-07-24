@@ -175,7 +175,7 @@ class MallOSApplication {
       });
     });
 
-    this.app.get('/health/database', async (req, res) => {
+    this.app.get('/health/database', async (_req, res) => {
       try {
         const status = databaseManager.getStatus();
         const pool = {}; // Pool status not available
