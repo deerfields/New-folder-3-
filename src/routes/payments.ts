@@ -24,7 +24,7 @@ function handlePaymentError(res: Response, error: any) {
 }
 
 // Helper: Write audit log
-async function writeAuditLog(req, action, resource, resourceId, success, errorMessage) {
+async function writeAuditLog(req: any, action: string, resource: string, resourceId: string | null, success: boolean, errorMessage?: string) {
   const repo = getRepository(AuditLog);
   await repo.save({
     userId: req.user?.id,
@@ -331,4 +331,4 @@ router.post(
   }
 );
 
-export default router; 
+export default router;
