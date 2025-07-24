@@ -28,7 +28,7 @@ router.post('/', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_AD
     if (Array.isArray(recipients) && recipients.length > 0) {
       await createNotificationRecipients(saved.id, recipients);
     } else {
-      // اگر گیرنده خاصی تعیین نشده، به همه مستأجران ارسال شود
+      // اگر گیر��ده خاصی تعیین نشده، به همه مستأجران ارسال شود
       const tenants = await database.getRepository(Tenant).find();
       const allTenantUserIds = tenants.map(t => t.id); // فرض: id همان userId است، در صورت نیاز اصلاح شود
       await createNotificationRecipients(saved.id, allTenantUserIds);
@@ -56,7 +56,7 @@ router.get('/:id/read-status', authenticate, authorize([UserRole.SUPER_ADMIN, Us
 });
 
 // ثبت خواندن اعلان توسط کاربر
-router.post('/:id/mark-read', authenticate, async (req: Request, res: Response) => {
+router.post('/:id/mark-read', authenticate, async (req: Request & { user: any }, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
