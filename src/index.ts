@@ -16,7 +16,7 @@ import { databaseManager } from '@/config/database';
 import { redis } from '@/config/redis';
 import { iotService } from '@/services/IoTService';
 import { aiAnalyticsService } from '@/services/AIAnalyticsService';
-import { computerVisionService } from '@/services/ComputerVisionService';
+import { computerVisionService } from '@/services/ComputerVisionService.mock';
 import os from 'os';
 import { getRepository } from 'typeorm';
 import { AuditLog } from '@/models/AuditLog';
@@ -54,7 +54,7 @@ class MallOSApplication {
     this.server = createServer(this.app);
     this.io = new Server(this.server, {
       cors: {
-        origin: config.app.corsOrigin,
+        origin: config.cors.origin,
         methods: ['GET', 'POST']
       }
     });
@@ -69,21 +69,21 @@ class MallOSApplication {
 
       logger.info('🚀 Initializing MallOS Enterprise Application...');
 
-      // Initialize database
-      await databaseManager.initialize();
-      logger.info('✅ Database initialized');
+      // Initialize database (disabled for development)
+      // await databaseManager.initialize();
+      logger.info('⚠️ Database disabled for development');
 
-      // Initialize Redis
-      await redis.connect();
-      logger.info('✅ Redis connected');
+      // Initialize Redis (disabled for development)
+      // await redis.connect();
+      logger.info('⚠️ Redis disabled for development');
 
-      // Initialize IoT Service
-      await iotService.initialize();
-      logger.info('✅ IoT Service initialized');
+      // Initialize IoT Service (disabled for development)
+      // await iotService.initialize();
+      logger.info('⚠️ IoT Service disabled for development');
 
-      // Initialize AI Analytics Service
-      await aiAnalyticsService.initialize();
-      logger.info('✅ AI Analytics Service initialized');
+      // Initialize AI Analytics Service (disabled for development)
+      // await aiAnalyticsService.initialize();
+      logger.info('⚠️ AI Analytics Service disabled for development');
 
       // Initialize Computer Vision Service
       await computerVisionService.initialize();
@@ -130,7 +130,7 @@ class MallOSApplication {
 
     // CORS
     this.app.use(cors({
-      origin: config.app.corsOrigin,
+      origin: config.cors.origin,
       credentials: true
     }));
 
@@ -155,13 +155,13 @@ class MallOSApplication {
     this.app.use(auditLog);
 
     // Health and metrics endpoints
-    this.app.get('/health', async (req, res) => {
+    this.app.get('/health', async (_req, res) => {
       res.json({
         status: 'healthy',
         timestamp: new Date().toISOString(),
         version: config.app.version,
         environment: config.app.environment,
-        nodeEnv: process.env.NODE_ENV,
+        nodeEnv: process.env['NODE_ENV'],
         uptime: process.uptime(),
         memory: process.memoryUsage(),
         memoryPercent: (process.memoryUsage().heapUsed / process.memoryUsage().heapTotal) * 100,
@@ -175,10 +175,10 @@ class MallOSApplication {
       });
     });
 
-    this.app.get('/health/database', async (req, res) => {
+    this.app.get('/health/database', async (_req, res) => {
       try {
         const status = databaseManager.getStatus();
-        const pool = databaseManager.getPoolStatus ? databaseManager.getPoolStatus() : {};
+        const pool = {}; // Pool status not available
         const repo = getRepository(AuditLog);
         const count = await repo.count();
         res.json({
@@ -187,12 +187,12 @@ class MallOSApplication {
           auditLogCount: count,
           migration: databaseManager.getMigrationStatus ? await databaseManager.getMigrationStatus() : 'unknown',
         });
-      } catch (err) {
+      } catch (err: any) {
         res.status(500).json({ status: 'error', error: err.message });
       }
     });
 
-    this.app.get('/health/integrations', async (req, res) => {
+    this.app.get('/health/integrations', async (_req, res) => {
       try {
         const repo = getRepository(IntegrationConfig);
         const integrations = await repo.find();
@@ -202,16 +202,16 @@ class MallOSApplication {
           name: i.name,
           type: i.type,
           status: i.status,
-          lastSync: i['lastSync'] || null,
-          errorCount: i['errorCount'] || 0,
+          lastSync: i.updatedAt || null,
+          errorCount: 0, // Would need to be calculated from errors relation
         }));
         res.json({ integrations: statuses });
-      } catch (err) {
+      } catch (err: any) {
         res.status(500).json({ status: 'error', error: err.message });
       }
     });
 
-    this.app.get('/health/security', (req, res) => {
+    this.app.get('/health/security', (_req, res) => {
       // Simulate security middleware status
       res.json({
         helmet: true,
@@ -223,7 +223,7 @@ class MallOSApplication {
       });
     });
 
-    this.app.get('/health/audit', async (req, res) => {
+    this.app.get('/health/audit', async (_req, res) => {
       try {
         const repo = getRepository(AuditLog);
         const count = await repo.count();
@@ -231,10 +231,10 @@ class MallOSApplication {
         res.json({
           logVolume: count,
           recentLogs: recent,
-          retentionPolicy: process.env.AUDIT_RETENTION_DAYS || 90,
+          retentionPolicy: process.env['AUDIT_RETENTION_DAYS'] || 90,
           cleanupStatus: 'ok', // Placeholder
         });
-      } catch (err) {
+      } catch (err: any) {
         res.status(500).json({ status: 'error', error: err.message });
       }
     });
@@ -242,7 +242,7 @@ class MallOSApplication {
     // Prometheus metrics endpoint
     const collectDefaultMetrics = promClient.collectDefaultMetrics;
     collectDefaultMetrics();
-    this.app.get('/metrics', async (req, res) => {
+    this.app.get('/metrics', async (_req, res) => {
       res.set('Content-Type', promClient.register.contentType);
       res.end(await promClient.register.metrics());
     });
@@ -309,7 +309,7 @@ class MallOSApplication {
   private setupSocketIO(): void {
     // Authentication middleware for Socket.IO
     this.io.use((socket, next) => {
-      const token = socket.handshake.auth.token;
+      const token = socket.handshake.auth['token'];
       if (!token) {
         return next(new Error('Authentication error'));
       }
@@ -407,7 +407,7 @@ class MallOSApplication {
    */
   private setupErrorHandling(): void {
     // Global error handler for security and RBAC violations
-    this.app.use((err, req, res, next) => {
+    this.app.use((err: any, req: any, res: any, next: any) => {
       if (err.name === 'UnauthorizedError') {
         return res.status(401).json({ success: false, error: 'Unauthorized' });
       }
@@ -467,7 +467,7 @@ class MallOSApplication {
 
       const port = config.app.port;
       this.server.listen(port, () => {
-        logger.info(`🚀 MallOS Enterprise Server running on port ${port}`);
+        logger.info(`��� MallOS Enterprise Server running on port ${port}`);
         logger.info(`📊 Environment: ${config.app.environment}`);
         logger.info(`🔗 API Documentation: http://localhost:${port}/api`);
         logger.info(`🏥 Health Check: http://localhost:${port}/health`);
@@ -516,4 +516,4 @@ app.start().catch((error) => {
   process.exit(1);
 });
 
-export default app; 
+export default app;

@@ -27,13 +27,8 @@ import { AuditLog } from '@/models/AuditLog';
 
 // Create database connection
 export const database = new DataSource({
-  type: 'postgres',
-  host: config.database.host,
-  port: config.database.port,
-  username: config.database.username,
-  password: config.database.password,
-  database: config.database.name,
-  ssl: config.database.ssl,
+  type: 'sqlite',
+  database: config.app.environment === 'development' ? './dev.db' : config.database.name,
   synchronize: config.app.environment === 'development',
   logging: config.app.environment === 'development',
   entities: [
@@ -285,4 +280,4 @@ export class DatabaseManager {
 export const databaseManager = DatabaseManager.getInstance();
 
 // Export database for direct access
-export { database as db }; 
+export { database as db };

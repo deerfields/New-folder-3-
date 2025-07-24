@@ -95,4 +95,7 @@ export async function requireMfa(req: Request, res: Response, next: NextFunction
     return res.status(401).json({ message: 'MFA required' });
   }
   next();
-} 
+}
+
+// Alias for backwards compatibility
+export const authMiddleware = authenticate;
