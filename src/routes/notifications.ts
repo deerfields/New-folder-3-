@@ -21,7 +21,7 @@ router.post('/', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_AD
       type,
       // سایر فیلدهای لازم
       timestamp: new Date(),
-      status: 'SENT',
+      status: NotificationStatus.SENT,
     });
     const saved = await notificationRepo.save(notification);
     // ساخت recipients
