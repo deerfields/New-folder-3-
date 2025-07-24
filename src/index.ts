@@ -178,7 +178,7 @@ class MallOSApplication {
     this.app.get('/health/database', async (req, res) => {
       try {
         const status = databaseManager.getStatus();
-        const pool = databaseManager.getPoolStatus ? databaseManager.getPoolStatus() : {};
+        const pool = {}; // Pool status not available
         const repo = getRepository(AuditLog);
         const count = await repo.count();
         res.json({
