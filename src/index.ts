@@ -234,7 +234,7 @@ class MallOSApplication {
           retentionPolicy: process.env['AUDIT_RETENTION_DAYS'] || 90,
           cleanupStatus: 'ok', // Placeholder
         });
-      } catch (err) {
+      } catch (err: any) {
         res.status(500).json({ status: 'error', error: err.message });
       }
     });
