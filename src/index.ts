@@ -407,7 +407,7 @@ class MallOSApplication {
    */
   private setupErrorHandling(): void {
     // Global error handler for security and RBAC violations
-    this.app.use((err, req, res, next) => {
+    this.app.use((err: any, req: any, res: any, next: any) => {
       if (err.name === 'UnauthorizedError') {
         return res.status(401).json({ success: false, error: 'Unauthorized' });
       }
