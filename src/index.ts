@@ -211,7 +211,7 @@ class MallOSApplication {
       }
     });
 
-    this.app.get('/health/security', (req, res) => {
+    this.app.get('/health/security', (_req, res) => {
       // Simulate security middleware status
       res.json({
         helmet: true,
