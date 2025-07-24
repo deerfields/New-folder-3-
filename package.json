@@ -91,7 +91,7 @@
     "opencv4nodejs": "^5.6.0",
     "natural": "^6.5.0",
     "face-api.js": "^0.22.2",
-    "canvas": "^2.11.2",
+
     "jimp": "^0.22.10",
     "sharp": "^0.32.6",
     "node-cron": "^3.0.2",
