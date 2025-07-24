@@ -202,8 +202,8 @@ class MallOSApplication {
           name: i.name,
           type: i.type,
           status: i.status,
-          lastSync: i['lastSync'] || null,
-          errorCount: i['errorCount'] || 0,
+          lastSync: i.updatedAt || null,
+          errorCount: 0, // Would need to be calculated from errors relation
         }));
         res.json({ integrations: statuses });
       } catch (err) {
