@@ -40,7 +40,7 @@ router.post('/', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_AD
 });
 
 // وضعیت خواندن اعلان توسط مستأجران (جدید)
-router.get('/:id/read-status', authenticate, authorize(['ADMIN', 'MALL_MANAGER']), async (req: Request, res: Response) => {
+router.get('/:id/read-status', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     // دریافت همه رکوردهای recipient برای این اعلان
