@@ -73,17 +73,17 @@ class MallOSApplication {
       await databaseManager.initialize();
       logger.info('✅ Database initialized');
 
-      // Initialize Redis
-      await redis.connect();
-      logger.info('✅ Redis connected');
+      // Initialize Redis (disabled for development)
+      // await redis.connect();
+      logger.info('⚠️ Redis disabled for development');
 
-      // Initialize IoT Service
-      await iotService.initialize();
-      logger.info('✅ IoT Service initialized');
+      // Initialize IoT Service (disabled for development)
+      // await iotService.initialize();
+      logger.info('⚠️ IoT Service disabled for development');
 
-      // Initialize AI Analytics Service
-      await aiAnalyticsService.initialize();
-      logger.info('✅ AI Analytics Service initialized');
+      // Initialize AI Analytics Service (disabled for development)
+      // await aiAnalyticsService.initialize();
+      logger.info('⚠️ AI Analytics Service disabled for development');
 
       // Initialize Computer Vision Service
       await computerVisionService.initialize();
@@ -336,7 +336,7 @@ class MallOSApplication {
       socket.on('subscribe-ai-predictions', (data) => {
         const { type } = data;
         socket.join(`ai-${type}`);
-        logger.info(`🤖 Client ${socket.id} subscribed to AI predictions: ${type}`);
+        logger.info(`��� Client ${socket.id} subscribed to AI predictions: ${type}`);
       });
 
       // Handle computer vision alerts subscriptions
