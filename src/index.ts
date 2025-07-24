@@ -187,7 +187,7 @@ class MallOSApplication {
           auditLogCount: count,
           migration: databaseManager.getMigrationStatus ? await databaseManager.getMigrationStatus() : 'unknown',
         });
-      } catch (err) {
+      } catch (err: any) {
         res.status(500).json({ status: 'error', error: err.message });
       }
     });
