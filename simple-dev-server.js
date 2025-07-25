@@ -1,5 +1,5 @@
-import express from 'express';
-import cors from 'cors';
+const express = require('express');
+const cors = require('cors');
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -52,6 +52,9 @@ app.post('/api/test', (req, res) => {
   });
 });
 
+// Serve static frontend if available
+app.use(express.static('frontend/dist'));
+
 // Error handling
 app.use((req, res) => {
   res.status(404).json({
@@ -61,7 +64,7 @@ app.use((req, res) => {
   });
 });
 
-app.use((err: any, req: any, res: any, next: any) => {
+app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(500).json({
     error: 'Internal Server Error',
