@@ -40,7 +40,7 @@ import { auditLog } from '@/middleware/audit';
 
 // Import middleware
 import { authMiddleware } from '@/middleware/auth';
-import { errorHandler } from '@/middleware/errorHandler';
+// import { errorHandler } from '@/middleware/errorHandler';
 import { rateLimiter } from '@/middleware/rateLimiter';
 
 class MallOSApplication {
@@ -85,9 +85,9 @@ class MallOSApplication {
       // await aiAnalyticsService.initialize();
       logger.info('⚠️ AI Analytics Service disabled for development');
 
-      // Initialize Computer Vision Service
-      await computerVisionService.initialize();
-      logger.info('✅ Computer Vision Service initialized');
+      // Initialize Computer Vision Service (disabled for development)
+      // await computerVisionService.initialize();
+      logger.info('⚠️ Computer Vision Service disabled for development');
 
       // Setup middleware
       this.setupMiddleware();
@@ -273,7 +273,7 @@ class MallOSApplication {
     this.app.use('/api/audit-logs', auditLogRouter);
 
     // API documentation
-    this.app.get('/api', (req, res) => {
+    this.app.get('/api', (_req, res) => {
       res.json({
         name: 'MallOS Enterprise API',
         version: config.app.version,
@@ -407,7 +407,7 @@ class MallOSApplication {
    */
   private setupErrorHandling(): void {
     // Global error handler for security and RBAC violations
-    this.app.use((err: any, req: any, res: any, next: any) => {
+    this.app.use((err: any, _req: any, res: any, _next: any) => {
       if (err.name === 'UnauthorizedError') {
         return res.status(401).json({ success: false, error: 'Unauthorized' });
       }
