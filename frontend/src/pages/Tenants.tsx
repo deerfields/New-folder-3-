@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from 'react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { 
   Plus, 
   Search, 
@@ -315,4 +315,4 @@ export default function Tenants() {
       </div>
     </div>
   )
-} 
+}
