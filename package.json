@@ -103,7 +103,7 @@
     "pdfkit": "^0.13.0",
     "pg": "^8.11.3",
     "prom-client": "^13.2.0",
-    "puppeteer": "^21.3.6",
+    "puppeteer": "^22.6.2",
     "qrcode": "^1.5.3",
     "redis": "^4.6.8",
     "reflect-metadata": "^0.1.13",
