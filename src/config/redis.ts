@@ -13,7 +13,6 @@ export const redis = new Redis({
   port: config.redis.port,
   password: config.redis.password,
   db: config.redis.db,
-  retryDelayOnFailover: 100,
   maxRetriesPerRequest: 3,
   lazyConnect: true,
   keepAlive: 30000,
@@ -71,4 +70,4 @@ export class RedisManager {
 export const redisManager = RedisManager.getInstance();
 
 // Export Redis for direct access
-export { redis as cache }; 
+export { redis as cache };
