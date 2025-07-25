@@ -45,7 +45,7 @@
     "@tensorflow/tfjs-node": "^4.21.0",
     "aedes": "^0.48.1",
     "amqplib": "^0.10.3",
-    "apollo-server-express": "^3.12.1",
+    "@apollo/server": "^4.10.1",
     "aws-sdk": "^2.1450.0",
     "axios": "^1.5.0",
     "azure-storage": "^2.10.7",
