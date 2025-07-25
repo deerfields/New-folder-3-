@@ -90,6 +90,60 @@ app.get('/api/v1/status', (req, res) => {
   });
 });
 
+// API Documentation endpoint
+app.get('/api/docs', (req, res) => {
+  res.json({
+    title: 'MallOS Enterprise API',
+    version: '1.0.0',
+    description: 'Enterprise Mall Management Platform API',
+    endpoints: {
+      health: {
+        path: '/health',
+        method: 'GET',
+        description: 'Basic health check'
+      },
+      apiHealth: {
+        path: '/api/v1/health',
+        method: 'GET',
+        description: 'API health check'
+      },
+      apiStatus: {
+        path: '/api/v1/status',
+        method: 'GET',
+        description: 'Detailed system status'
+      },
+      apiDocs: {
+        path: '/api/docs',
+        method: 'GET',
+        description: 'API documentation'
+      },
+      test: {
+        path: '/api/test',
+        methods: ['GET', 'POST'],
+        description: 'Test endpoints for API validation'
+      }
+    },
+    features: {
+      ai: {
+        enabled: process.env.ENABLE_AI_ANALYTICS === 'true',
+        description: 'AI Analytics and Machine Learning'
+      },
+      iot: {
+        enabled: process.env.ENABLE_IOT_INTEGRATION === 'true',
+        description: 'IoT Device Integration'
+      },
+      blockchain: {
+        enabled: process.env.ENABLE_BLOCKCHAIN === 'true',
+        description: 'Blockchain Integration'
+      },
+      computerVision: {
+        enabled: process.env.ENABLE_COMPUTER_VISION === 'true',
+        description: 'Computer Vision and Image Processing'
+      }
+    }
+  });
+});
+
 // Test endpoints
 app.get('/api/test', (req, res) => {
   res.json({
