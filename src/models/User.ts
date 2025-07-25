@@ -157,6 +157,9 @@ export class User {
     };
   };
 
+  @Column({ default: false })
+  mfaEnabled: boolean;
+
   @Column({ type: 'timestamp', nullable: true })
   lastLoginAt?: Date;
 

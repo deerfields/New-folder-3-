@@ -15,7 +15,7 @@ import { UserRole } from '@/models/User';
 const router = express.Router();
 
 // Get all malls (with pagination and filtering)
-router.get('/', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGER]), async (req: Request, res: Response) => {
+router.get('/', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { page = 1, limit = 20, status, type, class: mallClass, search } = req.query;
     const mallRepo = database.getRepository(Mall);
@@ -113,7 +113,7 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
 });
 
 // Create new mall
-router.post('/', authenticate, authorize([UserRole.ADMIN]), async (req: Request, res: Response) => {
+router.post('/', authenticate, authorize([UserRole.SUPER_ADMIN]), async (req: Request, res: Response) => {
   try {
     const {
       name,
@@ -151,7 +151,7 @@ router.post('/', authenticate, authorize([UserRole.ADMIN]), async (req: Request,
     });
     
     await mallRepo.save(mall);
-    logger.info(`Mall created: ${mall.name} by ${req.user.id}`);
+    logger.info(`Mall created: ${mall.name} by ${req.user?.id}`);
     
     return res.status(201).json({
       message: 'Mall created successfully',
@@ -165,7 +165,7 @@ router.post('/', authenticate, authorize([UserRole.ADMIN]), async (req: Request,
 });
 
 // Update mall
-router.put('/:id', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGER]), async (req: Request, res: Response) => {
+router.put('/:id', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
@@ -180,7 +180,7 @@ router.put('/:id', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGE
     Object.assign(mall, updateData);
     
     await mallRepo.save(mall);
-    logger.info(`Mall updated: ${mall.name} by ${req.user.id}`);
+    logger.info(`Mall updated: ${mall.name} by ${req.user?.id}`);
     
     return res.json({ message: 'Mall updated successfully' });
   } catch (err) {
@@ -197,7 +197,7 @@ router.get('/:id/tenants', authenticate, async (req: Request, res: Response) => 
     const tenantRepo = database.getRepository(Tenant);
     
     const queryBuilder = tenantRepo.createQueryBuilder('tenant')
-      .where('tenant.mallId = :mallId', { mallId: id });
+      .where('tenant.mall.id = :mallId', { mallId: id });
     
     if (status) {
       queryBuilder.andWhere('tenant.status = :status', { status });
@@ -218,10 +218,10 @@ router.get('/:id/tenants', authenticate, async (req: Request, res: Response) => 
         type: tenant.type,
         category: tenant.category,
         status: tenant.status,
-        contactEmail: tenant.contactEmail,
-        contactPhone: tenant.contactPhone,
-        leaseStartDate: tenant.leaseStartDate,
-        leaseEndDate: tenant.leaseEndDate
+        contactEmail: tenant.email,
+        contactPhone: tenant.phoneNumber,
+        leaseStartDate: tenant.leaseDetails.startDate,
+        leaseEndDate: tenant.leaseDetails.endDate
       })),
       pagination: {
         page: Number(page),
@@ -249,16 +249,16 @@ router.get('/:id/stats', authenticate, async (req: Request, res: Response) => {
     }
     
     const [totalTenants, activeTenants, pendingTenants] = await Promise.all([
-      tenantRepo.count({ where: { mallId: id } }),
-      tenantRepo.count({ where: { mallId: id, status: 'ACTIVE' } }),
-      tenantRepo.count({ where: { mallId: id, status: 'PENDING_APPROVAL' } })
+      tenantRepo.count({ where: { mall: { id } } }),
+      tenantRepo.count({ where: { mall: { id }, status: TenantStatus.ACTIVE } }),
+      tenantRepo.count({ where: { mall: { id }, status: TenantStatus.PENDING_APPROVAL } })
     ]);
     
     const categoryStats = await tenantRepo
       .createQueryBuilder('tenant')
       .select('tenant.category', 'category')
       .addSelect('COUNT(*)', 'count')
-      .where('tenant.mallId = :mallId', { mallId: id })
+      .where('tenant.mall.id = :mallId', { mallId: id })
       .groupBy('tenant.category')
       .getRawMany();
     
@@ -283,7 +283,7 @@ router.get('/:id/stats', authenticate, async (req: Request, res: Response) => {
 });
 
 // Get mall overview statistics
-router.get('/stats/overview', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGER]), async (req: Request, res: Response) => {
+router.get('/stats/overview', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN]), async (req: Request, res: Response) => {
   try {
     const mallRepo = database.getRepository(Mall);
     const tenantRepo = database.getRepository(Tenant);

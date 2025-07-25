@@ -51,7 +51,6 @@ export const database = new DataSource({
   ],
   migrations: ['src/database/migrations/*.ts'],
   subscribers: ['src/database/subscribers/*.ts'],
-  poolSize: config.database.pool.max,
   extra: {
     connectionLimit: config.database.pool.max,
     acquireTimeout: 60000,

@@ -591,24 +591,24 @@ export class InitialSchema1700000000000 implements MigrationInterface {
     )
 
     // Create indexes
-    await queryRunner.createIndex('users', { name: 'idx_users_email', columnNames: ['email'] })
-    await queryRunner.createIndex('users', { name: 'idx_users_tenant_id', columnNames: ['tenant_id'] })
-    await queryRunner.createIndex('users', { name: 'idx_users_role', columnNames: ['role'] })
-    await queryRunner.createIndex('users', { name: 'idx_users_status', columnNames: ['status'] })
+    await queryRunner.createIndex('users', new TableIndex({ name: 'idx_users_email', columnNames: ['email'] }))
+    await queryRunner.createIndex('users', new TableIndex({ name: 'idx_users_tenant_id', columnNames: ['tenant_id'] }))
+    await queryRunner.createIndex('users', new TableIndex({ name: 'idx_users_role', columnNames: ['role'] }))
+    await queryRunner.createIndex('users', new TableIndex({ name: 'idx_users_status', columnNames: ['status'] }))
 
-    await queryRunner.createIndex('malls', { name: 'idx_malls_code', columnNames: ['mall_code'] })
-    await queryRunner.createIndex('malls', { name: 'idx_malls_status', columnNames: ['status'] })
+    await queryRunner.createIndex('malls', new TableIndex({ name: 'idx_malls_code', columnNames: ['mall_code'] }))
+    await queryRunner.createIndex('malls', new TableIndex({ name: 'idx_malls_status', columnNames: ['status'] }))
 
-    await queryRunner.createIndex('tenants', { name: 'idx_tenants_code', columnNames: ['tenant_code'] })
-    await queryRunner.createIndex('tenants', { name: 'idx_tenants_mall_id', columnNames: ['mall_id'] })
-    await queryRunner.createIndex('tenants', { name: 'idx_tenants_status', columnNames: ['status'] })
-    await queryRunner.createIndex('tenants', { name: 'idx_tenants_type', columnNames: ['type'] })
+    await queryRunner.createIndex('tenants', new TableIndex({ name: 'idx_tenants_code', columnNames: ['tenant_code'] }))
+    await queryRunner.createIndex('tenants', new TableIndex({ name: 'idx_tenants_mall_id', columnNames: ['mall_id'] }))
+    await queryRunner.createIndex('tenants', new TableIndex({ name: 'idx_tenants_status', columnNames: ['status'] }))
+    await queryRunner.createIndex('tenants', new TableIndex({ name: 'idx_tenants_type', columnNames: ['type'] }))
 
-    await queryRunner.createIndex('work_permits', { name: 'idx_work_permits_number', columnNames: ['permit_number'] })
-    await queryRunner.createIndex('work_permits', { name: 'idx_work_permits_tenant_id', columnNames: ['tenant_id'] })
-    await queryRunner.createIndex('work_permits', { name: 'idx_work_permits_mall_id', columnNames: ['mall_id'] })
-    await queryRunner.createIndex('work_permits', { name: 'idx_work_permits_status', columnNames: ['status'] })
-    await queryRunner.createIndex('work_permits', { name: 'idx_work_permits_type', columnNames: ['type'] })
+    await queryRunner.createIndex('work_permits', new TableIndex({ name: 'idx_work_permits_number', columnNames: ['permit_number'] }))
+    await queryRunner.createIndex('work_permits', new TableIndex({ name: 'idx_work_permits_tenant_id', columnNames: ['tenant_id'] }))
+    await queryRunner.createIndex('work_permits', new TableIndex({ name: 'idx_work_permits_mall_id', columnNames: ['mall_id'] }))
+    await queryRunner.createIndex('work_permits', new TableIndex({ name: 'idx_work_permits_status', columnNames: ['status'] }))
+    await queryRunner.createIndex('work_permits', new TableIndex({ name: 'idx_work_permits_type', columnNames: ['type'] }))
 
     // Create foreign keys
     await queryRunner.createForeignKey(

@@ -17,6 +17,8 @@ import {
 } from 'typeorm';
 import { IsNotEmpty, IsEmail, IsOptional, IsEnum } from 'class-validator';
 import { v4 as uuidv4 } from 'uuid';
+import { Mall } from './Mall';
+import { WorkPermit } from './WorkPermit';
 
 export enum TenantStatus {
   ACTIVE = 'active',
@@ -335,6 +337,13 @@ export class Tenant {
 
   @Column({ type: 'timestamp', nullable: true })
   deletedAt?: Date;
+
+  @ManyToOne(() => Mall, mall => mall.tenants)
+  @JoinColumn({ name: 'mallId' })
+  mall: Mall;
+
+  @OneToMany(() => WorkPermit, workPermit => workPermit.tenant)
+  workPermits: WorkPermit[];
 
   // Virtual properties
   get isActive(): boolean {

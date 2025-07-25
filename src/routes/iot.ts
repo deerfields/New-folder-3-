@@ -85,7 +85,7 @@ router.get('/devices',
         devices = await iotService.getDevicesByMall(mallId as string, type as DeviceType);
       } else {
         // Get all devices for user's malls
-        devices = await iotService.getDevicesByMall(req.user.mallId);
+        devices = await iotService.getDevicesByMall(req.user.mall?.id);
       }
 
       if (status) {
@@ -606,7 +606,7 @@ router.get('/analytics',
       }
 
       const { mallId, startDate, endDate } = req.query;
-      const mallIdToUse = mallId || req.user.mallId;
+      const mallIdToUse = mallId || req.user.mall?.id;
 
       // Get device statistics
       const deviceStats = await iotService.getStatistics();
@@ -677,7 +677,7 @@ router.get('/alerts',
       }
 
       const { mallId, severity, limit = 100 } = req.query;
-      const mallIdToUse = mallId || req.user.mallId;
+      const mallIdToUse = mallId || req.user.mall?.id;
 
       // Get alerts from database
       const alerts = await getAlerts(

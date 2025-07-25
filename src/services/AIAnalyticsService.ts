@@ -6,6 +6,7 @@
 import * as tf from '@tensorflow/tfjs-node';
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
+import { MoreThanOrEqual } from 'typeorm';
 import { logger } from '@/utils/logger';
 import { database } from '@/config/database';
 import { AIModel, ModelType, ModelStatus, ModelFramework } from '@/models/AIModel';
@@ -206,7 +207,7 @@ export class AIAnalyticsService extends EventEmitter {
           format: 'tensorflowjs'
         },
         metrics: {
-          accuracy: history.history.acc ? history.history.acc[history.history.acc.length - 1] : 0,
+          accuracy: history.history.accuracy ? history.history.accuracy[history.history.accuracy.length - 1] : 0,
           mse: history.history.loss ? history.history.loss[history.history.loss.length - 1] : 0
         }
       });
@@ -247,12 +248,12 @@ export class AIAnalyticsService extends EventEmitter {
     }));
 
     // Hidden layers
-    model.add(tf.layers.dropout(0.2));
+    model.add(tf.layers.dropout({ rate: 0.2 }));
     model.add(tf.layers.dense({
       units: 32,
       activation: 'relu'
     }));
-    model.add(tf.layers.dropout(0.2));
+    model.add(tf.layers.dropout({ rate: 0.2 }));
     model.add(tf.layers.dense({
       units: 16,
       activation: 'relu'
@@ -361,7 +362,7 @@ export class AIAnalyticsService extends EventEmitter {
       await database.getRepository(AIPrediction).update(savedPrediction.id, {
         status: PredictionStatus.COMPLETED,
         output: {
-          prediction: predictionValue[0],
+          prediction: predictionValue[0] as number,
           confidence: 0.85, // Calculate actual confidence
           probability: 0.85
         }
@@ -748,9 +749,7 @@ export class AIAnalyticsService extends EventEmitter {
       const totalPredictions = await database.getRepository(AIPrediction).count();
       const todayPredictions = await database.getRepository(AIPrediction).count({
         where: {
-          timestamp: {
-            $gte: new Date(new Date().setHours(0, 0, 0, 0))
-          }
+          timestamp: MoreThanOrEqual(new Date(new Date().setHours(0, 0, 0, 0)))
         }
       });
 

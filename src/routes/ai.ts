@@ -70,7 +70,7 @@ router.get('/models',
       }
 
       const { mallId, type, status } = req.query;
-      const mallIdToUse = mallId || req.user.mallId;
+      const mallIdToUse = mallId || req.user.mall?.id;
 
       // Get models from database
       const models = await getModels(mallIdToUse as string, type as ModelType, status as ModelStatus);
@@ -359,7 +359,7 @@ router.get('/predictions',
       }
 
       const { mallId, type, status, limit = 100 } = req.query;
-      const mallIdToUse = mallId || req.user.mallId;
+      const mallIdToUse = mallId || req.user.mall?.id;
 
       const predictions = await getPredictions(
         mallIdToUse as string,
@@ -668,7 +668,7 @@ router.get('/analytics',
       }
 
       const { mallId, startDate, endDate } = req.query;
-      const mallIdToUse = mallId || req.user.mallId;
+      const mallIdToUse = mallId || req.user.mall?.id;
 
       // Get AI statistics
       const aiStats = await aiAnalyticsService.getStatistics();

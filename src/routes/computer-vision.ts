@@ -62,7 +62,7 @@ router.get('/cameras',
       }
 
       const { mallId, area } = req.query;
-      const mallIdToUse = mallId || req.user.mallId;
+      const mallIdToUse = mallId || req.user.mall?.id;
 
       // Get cameras from service
       const cameras = await getCameras(mallIdToUse as string, area as string);
@@ -279,7 +279,7 @@ router.get('/detections',
       }
 
       const { mallId, cameraId, type, status, startDate, endDate, limit = 100 } = req.query;
-      const mallIdToUse = mallId || req.user.mallId;
+      const mallIdToUse = mallId || req.user.mall?.id;
 
       const detections = await getDetections(
         mallIdToUse as string,
@@ -474,12 +474,12 @@ router.get('/alerts',
       }
 
       const { mallId, threatLevel, acknowledged, limit = 100 } = req.query;
-      const mallIdToUse = mallId || req.user.mallId;
+      const mallIdToUse = mallId || req.user.mall?.id;
 
       const alerts = await getSecurityAlerts(
         mallIdToUse as string,
         threatLevel as ThreatLevel,
-        acknowledged as boolean,
+        acknowledged === 'true',
         parseInt(limit as string)
       );
 
@@ -603,7 +603,7 @@ router.get('/analytics',
       }
 
       const { mallId, startDate, endDate } = req.query;
-      const mallIdToUse = mallId || req.user.mallId;
+      const mallIdToUse = mallId || req.user.mall?.id;
 
       // Get computer vision statistics
       const cvStats = await computerVisionService.getStatistics();

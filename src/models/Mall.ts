@@ -6,6 +6,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, Index, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm'
 import { IsEnum, IsNotEmpty, IsOptional, IsString, IsObject } from 'class-validator'
 import { Tenant } from './Tenant'
+import { WorkPermit } from './WorkPermit'
 
 export enum MallType {
   SHOPPING_CENTER = 'SHOPPING_CENTER',
@@ -177,6 +178,9 @@ export class Mall {
   // Relationships
   @OneToMany(() => Tenant, tenant => tenant.mall)
   tenants?: Tenant[]
+
+  @OneToMany(() => WorkPermit, workPermit => workPermit.mall)
+  workPermits: WorkPermit[];
 
   // Methods
   updateStatus(status: MallStatus): void {

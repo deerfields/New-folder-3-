@@ -25,12 +25,12 @@ function handlePaymentError(res: Response, error: any) {
 
 // Helper: Write audit log
 async function writeAuditLog(req: any, action: string, resource: string, resourceId: string | null, success: boolean, errorMessage?: string) {
-  const repo = getRepository(AuditLog);
+  const repo = database.getRepository(AuditLog);
   await repo.save({
     userId: req.user?.id,
     userRole: req.user?.role,
     username: req.user?.username,
-    tenantId: req.user?.tenantId,
+    tenant: req.user?.tenant,
     ipAddress: req.ip,
     userAgent: req.headers['user-agent'],
     endpoint: req.originalUrl,
@@ -58,7 +58,7 @@ router.post(
     if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
     try {
       let { amount, currency, customerId, metadata, tenantId } = req.body;
-      tenantId = tenantId || req.user.tenantId;
+      tenantId = tenantId || req.user.tenant.id;
       // Convert to AED if needed
       const amountAED = currency === 'AED' ? amount : await CurrencyService.convertAmount(amount, currency, 'AED');
       // Calculate VAT
@@ -67,7 +67,7 @@ router.post(
       // Create payment intent in Stripe (amount in fils)
       const paymentIntent = await stripeService.createPaymentIntent({ amount: Math.round(totalAmount * 100), currency: 'AED', customerId, metadata: { ...metadata, vat, tenantId } });
       // Persist Payment
-      const paymentRepo = getRepository(Payment);
+      const paymentRepo = database.getRepository(Payment);
       const payment = paymentRepo.create({
         stripePaymentId: paymentIntent.id,
         amount: totalAmount,
@@ -89,6 +89,7 @@ router.post(
   }
 );
 
+
 // POST /api/payments/stripe/create-subscription
 router.post(
   '/stripe/create-subscription',
@@ -102,11 +103,11 @@ router.post(
     if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
     try {
       let { customerId, priceId, metadata, tenantId } = req.body;
-      tenantId = tenantId || req.user.tenantId;
+      tenantId = tenantId || req.user.tenant.id;
       // TODO: Plan validation, billing cycle, etc.
       const subscription = await stripeService.createSubscription({ customerId, priceId, metadata: { ...metadata, tenantId } });
       // Persist Subscription
-      const subRepo = getRepository(Subscription);
+      const subRepo = database.getRepository(Subscription);
       const sub = subRepo.create({
         stripeSubscriptionId: subscription.id,
         customerId,
@@ -145,7 +146,7 @@ router.post(
       const { paymentIntentId } = req.body;
       const paymentIntent = await stripeService.capturePayment(paymentIntentId);
       // Update Payment status
-      const paymentRepo = getRepository(Payment);
+      const paymentRepo = database.getRepository(Payment);
       const payment = await paymentRepo.findOne({ where: { stripePaymentId: paymentIntentId } });
       if (payment) {
         payment.status = paymentIntent.status;
@@ -176,13 +177,13 @@ router.post(
       const { paymentIntentId, amount } = req.body;
       const refund = await stripeService.refundPayment(paymentIntentId, amount ? Math.round(amount * 100) : undefined);
       // Update Payment/Transaction
-      const paymentRepo = getRepository(Payment);
+      const paymentRepo = database.getRepository(Payment);
       const payment = await paymentRepo.findOne({ where: { stripePaymentId: paymentIntentId } });
       if (payment) {
         payment.status = 'refunded';
         await paymentRepo.save(payment);
       }
-      const txRepo = getRepository(Transaction);
+      const txRepo = database.getRepository(Transaction);
       const tx = txRepo.create({
         paymentId: payment?.id,
         type: 'refund',
@@ -208,7 +209,7 @@ router.post(
 router.get(
   '/stripe/payment-history',
   authenticate,
-  authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN, UserRole.TENANT_ADMIN, UserRole.TENANT_USER]),
+  authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN, UserRole.TENANT_ADMIN]),
   auditLog,
   query('customerId').optional().isString(),
   query('status').optional().isString(),
@@ -219,9 +220,9 @@ router.get(
     if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
     try {
       const { customerId, status, page = 1, limit = 20 } = req.query;
-      const paymentRepo = getRepository(Payment);
+      const paymentRepo = database.getRepository(Payment);
       // Tenant isolation
-      const where: any = { tenantId: req.user.tenantId };
+      const where: any = { tenant: { id: req.user.tenant.id } };
       if (customerId) where.customerId = customerId;
       if (status) where.status = status;
       const [payments, total] = await paymentRepo.findAndCount({
@@ -243,7 +244,7 @@ router.get(
 router.get(
   '/stripe/customer/:id',
   authenticate,
-  authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN, UserRole.TENANT_ADMIN, UserRole.TENANT_USER]),
+  authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN, UserRole.TENANT_ADMIN]),
   auditLog,
   param('id').isString().notEmpty(),
   async (req: Request, res: Response) => {
@@ -251,8 +252,8 @@ router.get(
     if (!errors.isEmpty()) return res.status(422).json({ errors: errors.array() });
     try {
       // Tenant/customer validation
-      const customerRepo = getRepository(Customer);
-      const customer = await customerRepo.findOne({ where: { stripeCustomerId: req.params.id, tenantId: req.user.tenantId } });
+      const customerRepo = database.getRepository(Customer);
+      const customer = await customerRepo.findOne({ where: { stripeCustomerId: req.params.id, tenant: { id: req.user.tenant.id } } });
       if (!customer) throw new Error('Customer not found or access denied');
       // Optionally fetch from Stripe as well
       const stripeCustomer = await stripeService.getCustomer(req.params.id);
@@ -303,7 +304,7 @@ router.post(
         // Example: if (event.type === 'payment_intent.succeeded') { ... }
       });
       // Write audit log (webhook events may not have user context)
-      const repo = getRepository(AuditLog);
+      const repo = database.getRepository(AuditLog);
       await repo.save({
         endpoint: req.originalUrl,
         method: req.method,
@@ -315,7 +316,7 @@ router.post(
       });
       res.json({ success: true, message: 'Webhook received' });
     } catch (error) {
-      const repo = getRepository(AuditLog);
+      const repo = database.getRepository(AuditLog);
       await repo.save({
         endpoint: req.originalUrl,
         method: req.method,

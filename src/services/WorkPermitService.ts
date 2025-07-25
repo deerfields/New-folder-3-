@@ -95,7 +95,7 @@ export class WorkPermitService {
     })
 
     if (!tenant) {
-      throw new ApiError(400, 'Tenant not found')
+      throw new Error('Tenant not found')
     }
 
     // Validate mall exists
@@ -104,12 +104,12 @@ export class WorkPermitService {
     })
 
     if (!mall) {
-      throw new ApiError(400, 'Mall not found')
+      throw new Error('Mall not found')
     }
 
     // Validate dates
     if (new Date(data.startDate) >= new Date(data.endDate)) {
-      throw new ApiError(400, 'End date must be after start date')
+      throw new Error('End date must be after start date')
     }
 
     // Create work permit
@@ -141,13 +141,13 @@ export class WorkPermitService {
 
     // Check if work permit can be updated
     if (workPermit.status === WorkPermitStatus.COMPLETED) {
-      throw new ApiError(400, 'Cannot update completed work permit')
+      throw new Error('Cannot update completed work permit')
     }
 
     // Validate dates if provided
     if (data.startDate && data.endDate) {
       if (new Date(data.startDate) >= new Date(data.endDate)) {
-        throw new ApiError(400, 'End date must be after start date')
+        throw new Error('End date must be after start date')
       }
     }
 
@@ -166,9 +166,9 @@ export class WorkPermitService {
 
   async approveWorkPermit(id: string, approvedBy: string, comments?: string): Promise<WorkPermit | null> {
     const permit = await this.getWorkPermitById(id)
-    if (!permit) throw new ApiError(404, 'Work permit not found')
+    if (!permit) throw new Error('Work permit not found')
     if (permit.status !== WorkPermitStatus.PENDING_APPROVAL) {
-      throw new ApiError(400, 'Work permit is not pending approval')
+      throw new Error('Work permit is not pending approval')
     }
     permit.status = WorkPermitStatus.APPROVED
     permit.approvals = {
@@ -197,7 +197,7 @@ export class WorkPermitService {
     }
 
     if (workPermit.status !== WorkPermitStatus.PENDING_APPROVAL) {
-      throw new ApiError(400, 'Work permit is not pending approval')
+      throw new Error('Work permit is not pending approval')
     }
 
     workPermit.reject(rejectedBy, reason)
@@ -222,7 +222,7 @@ export class WorkPermitService {
     }
 
     if (workPermit.status !== WorkPermitStatus.APPROVED) {
-      throw new ApiError(400, 'Work permit must be approved before activation')
+      throw new Error('Work permit must be approved before activation')
     }
 
     workPermit.activate(activatedBy)
@@ -246,7 +246,7 @@ export class WorkPermitService {
     }
 
     if (workPermit.status !== WorkPermitStatus.ACTIVE) {
-      throw new ApiError(400, 'Work permit must be active to be completed')
+      throw new Error('Work permit must be active to be completed')
     }
 
     workPermit.complete(completedBy, completionNotes)
@@ -271,7 +271,7 @@ export class WorkPermitService {
     }
 
     if (workPermit.status === WorkPermitStatus.COMPLETED) {
-      throw new ApiError(400, 'Cannot cancel completed work permit')
+      throw new Error('Cannot cancel completed work permit')
     }
 
     workPermit.cancel(cancelledBy, reason)
@@ -520,7 +520,7 @@ export class WorkPermitService {
 
   async generateWorkPermitPDF(permitId: string): Promise<string> {
     const permit = await this.getWorkPermitById(permitId);
-    if (!permit) throw new ApiError(404, 'Work permit not found');
+    if (!permit) throw new Error('Work permit not found');
 
     // مسیر ذخیره فایل PDF
     const filePath = `./pdfs/work_permit_${permit.permitNumber}.pdf`;
@@ -533,7 +533,7 @@ export class WorkPermitService {
 
     // اطلاعات اصلی
     doc.fontSize(12).text(`Permit Number: ${permit.permitNumber}`);
-    doc.text(`Company Name: ${permit.tenant?.name || ''}`);
+    doc.text(`Company Name: ${permit.tenant?.businessName || ''}`);
     doc.text(`Job Location: ${permit.location?.address || ''}`);
     doc.text(`Type: ${permit.type}`);
     doc.text(`Status: ${permit.status}`);

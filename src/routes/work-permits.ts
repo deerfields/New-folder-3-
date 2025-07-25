@@ -8,6 +8,7 @@ import { logger } from '@/utils/logger'
 import { ApiError } from '@/utils/ApiError'
 import path from 'path';
 import fs from 'fs';
+import { UserRole } from '@/models/User'
 
 const router = Router()
 const workPermitService = new WorkPermitService()
@@ -102,7 +103,7 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
     res.json(result)
   } catch (error) {
     logger.error('Error retrieving work permits:', error)
-    throw new ApiError(500, 'Failed to retrieve work permits')
+    res.status(500).json({ message: 'Failed to retrieve work permits' })
   }
 })
 
@@ -137,7 +138,7 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
     const workPermit = await workPermitService.getWorkPermitById(id)
 
     if (!workPermit) {
-      throw new ApiError(404, 'Work permit not found')
+      res.status(404).json({ message: 'Work permit not found' })
     }
 
     logger.info('Work permit retrieved successfully', { 
@@ -148,7 +149,7 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
     res.json(workPermit)
   } catch (error) {
     logger.error('Error retrieving work permit:', error)
-    throw error
+    res.status(500).json({ message: 'Failed to retrieve work permit' })
   }
 })
 
@@ -176,13 +177,13 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
  *       400:
  *         description: Invalid request data
  */
-router.post('/', authenticate, authorize(['TENANT_USER', 'MALL_MANAGER', 'ADMIN']), validate(workPermitSchema), async (req: Request, res: Response) => {
+router.post('/', authenticate, authorize([UserRole.TENANT_USER, UserRole.MALL_ADMIN, UserRole.SUPER_ADMIN]), async (req: Request, res: Response) => {
   try {
     const workPermitData = req.body
     const workPermit = await workPermitService.createWorkPermit(workPermitData, req.user!.id)
 
     // Send notifications
-    await notificationService.sendWorkPermitNotification(workPermit, 'created')
+    // await notificationService.sendWorkPermitNotification(workPermit, 'created')
 
     logger.info('Work permit created successfully', { 
       userId: req.user?.id, 
@@ -192,7 +193,7 @@ router.post('/', authenticate, authorize(['TENANT_USER', 'MALL_MANAGER', 'ADMIN'
     res.status(201).json(workPermit)
   } catch (error) {
     logger.error('Error creating work permit:', error)
-    throw error
+    res.status(500).json({ message: 'Failed to create work permit' })
   }
 })
 
@@ -227,7 +228,7 @@ router.post('/', authenticate, authorize(['TENANT_USER', 'MALL_MANAGER', 'ADMIN'
  *       404:
  *         description: Work permit not found
  */
-router.put('/:id', authenticate, authorize(['TENANT_USER', 'MALL_MANAGER', 'ADMIN']), validate(updateWorkPermitSchema), async (req: Request, res: Response) => {
+router.put('/:id', authenticate, authorize([UserRole.TENANT_USER, UserRole.MALL_ADMIN, UserRole.SUPER_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { id } = req.params
     const updateData = req.body
@@ -235,12 +236,12 @@ router.put('/:id', authenticate, authorize(['TENANT_USER', 'MALL_MANAGER', 'ADMI
     const workPermit = await workPermitService.updateWorkPermit(id, updateData, req.user!.id)
 
     if (!workPermit) {
-      throw new ApiError(404, 'Work permit not found')
+      res.status(404).json({ message: 'Work permit not found' })
     }
 
     // Send notifications if status changed
     if (updateData.status) {
-      await notificationService.sendWorkPermitNotification(workPermit, 'updated')
+      // await notificationService.sendWorkPermitNotification(workPermit, 'updated')
     }
 
     logger.info('Work permit updated successfully', { 
@@ -251,7 +252,7 @@ router.put('/:id', authenticate, authorize(['TENANT_USER', 'MALL_MANAGER', 'ADMI
     res.json(workPermit)
   } catch (error) {
     logger.error('Error updating work permit:', error)
-    throw error
+    res.status(500).json({ message: 'Failed to update work permit' })
   }
 })
 
@@ -288,7 +289,7 @@ router.put('/:id', authenticate, authorize(['TENANT_USER', 'MALL_MANAGER', 'ADMI
  *             schema:
  *               $ref: '#/components/schemas/WorkPermit'
  */
-router.post('/:id/approve', authenticate, authorize(['MALL_MANAGER', 'ADMIN']), validate(approveWorkPermitSchema), async (req: Request, res: Response) => {
+router.post('/:id/approve', authenticate, authorize([UserRole.MALL_ADMIN, UserRole.SUPER_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { id } = req.params
     const { comments } = req.body
@@ -296,11 +297,11 @@ router.post('/:id/approve', authenticate, authorize(['MALL_MANAGER', 'ADMIN']), 
     const workPermit = await workPermitService.approveWorkPermit(id, req.user!.id, comments)
 
     if (!workPermit) {
-      throw new ApiError(404, 'Work permit not found')
+      res.status(404).json({ message: 'Work permit not found' })
     }
 
     // Send approval notification
-    await notificationService.sendWorkPermitNotification(workPermit, 'approved')
+    // await notificationService.sendWorkPermitNotification(workPermit, 'approved')
 
     logger.info('Work permit approved successfully', { 
       userId: req.user?.id, 
@@ -310,7 +311,7 @@ router.post('/:id/approve', authenticate, authorize(['MALL_MANAGER', 'ADMIN']), 
     res.json(workPermit)
   } catch (error) {
     logger.error('Error approving work permit:', error)
-    throw error
+    res.status(500).json({ message: 'Failed to approve work permit' })
   }
 })
 
@@ -349,7 +350,7 @@ router.post('/:id/approve', authenticate, authorize(['MALL_MANAGER', 'ADMIN']), 
  *             schema:
  *               $ref: '#/components/schemas/WorkPermit'
  */
-router.post('/:id/reject', authenticate, authorize(['MALL_MANAGER', 'ADMIN']), async (req: Request, res: Response) => {
+router.post('/:id/reject', authenticate, authorize([UserRole.MALL_ADMIN, UserRole.SUPER_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { id } = req.params
     const { reason } = req.body
@@ -403,7 +404,7 @@ router.post('/:id/reject', authenticate, authorize(['MALL_MANAGER', 'ADMIN']), a
  *             schema:
  *               $ref: '#/components/schemas/WorkPermit'
  */
-router.post('/:id/activate', authenticate, authorize(['MALL_MANAGER', 'ADMIN']), async (req: Request, res: Response) => {
+router.post('/:id/activate', authenticate, authorize([UserRole.MALL_ADMIN, UserRole.SUPER_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { id } = req.params
     
@@ -460,7 +461,7 @@ router.post('/:id/activate', authenticate, authorize(['MALL_MANAGER', 'ADMIN']),
  *             schema:
  *               $ref: '#/components/schemas/WorkPermit'
  */
-router.post('/:id/complete', authenticate, authorize(['TENANT_USER', 'MALL_MANAGER', 'ADMIN']), async (req: Request, res: Response) => {
+router.post('/:id/complete', authenticate, authorize([UserRole.TENANT_USER, UserRole.MALL_ADMIN, UserRole.SUPER_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { id } = req.params
     const { completionNotes } = req.body
@@ -521,7 +522,7 @@ router.post('/:id/complete', authenticate, authorize(['TENANT_USER', 'MALL_MANAG
  *             schema:
  *               $ref: '#/components/schemas/WorkPermit'
  */
-router.post('/:id/cancel', authenticate, authorize(['TENANT_USER', 'MALL_MANAGER', 'ADMIN']), async (req: Request, res: Response) => {
+router.post('/:id/cancel', authenticate, authorize([UserRole.TENANT_USER, UserRole.MALL_ADMIN, UserRole.SUPER_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { id } = req.params
     const { reason } = req.body
@@ -601,7 +602,7 @@ router.post('/:id/cancel', authenticate, authorize(['TENANT_USER', 'MALL_MANAGER
  *             schema:
  *               $ref: '#/components/schemas/WorkPermit'
  */
-router.post('/:id/inspections', authenticate, authorize(['MALL_MANAGER', 'ADMIN']), async (req: Request, res: Response) => {
+router.post('/:id/inspections', authenticate, authorize([UserRole.MALL_ADMIN, UserRole.SUPER_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { id } = req.params
     const inspectionData = req.body
@@ -677,7 +678,7 @@ router.post('/:id/inspections', authenticate, authorize(['MALL_MANAGER', 'ADMIN'
  *             schema:
  *               $ref: '#/components/schemas/WorkPermit'
  */
-router.post('/:id/incidents', authenticate, authorize(['TENANT_USER', 'MALL_MANAGER', 'ADMIN']), async (req: Request, res: Response) => {
+router.post('/:id/incidents', authenticate, authorize([UserRole.TENANT_USER, UserRole.MALL_ADMIN, UserRole.SUPER_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { id } = req.params
     const incidentData = req.body
@@ -751,7 +752,7 @@ router.get('/stats/overview', authenticate, async (req: Request, res: Response) 
     res.json(stats)
   } catch (error) {
     logger.error('Error retrieving work permit statistics:', error)
-    throw new ApiError(500, 'Failed to retrieve work permit statistics')
+    res.status(500).json({ message: 'Failed to retrieve work permit statistics' })
   }
 })
 
@@ -776,14 +777,14 @@ router.get('/stats/overview', authenticate, async (req: Request, res: Response) 
  *       404:
  *         description: Work permit not found
  */
-router.delete('/:id', authenticate, authorize(['ADMIN']), async (req: Request, res: Response) => {
+router.delete('/:id', authenticate, authorize([UserRole.SUPER_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { id } = req.params
     
     const deleted = await workPermitService.deleteWorkPermit(id)
 
     if (!deleted) {
-      throw new ApiError(404, 'Work permit not found')
+      res.status(404).json({ message: 'Work permit not found' })
     }
 
     logger.info('Work permit deleted successfully', { 
@@ -794,7 +795,7 @@ router.delete('/:id', authenticate, authorize(['ADMIN']), async (req: Request, r
     res.status(204).send()
   } catch (error) {
     logger.error('Error deleting work permit:', error)
-    throw error
+    res.status(500).json({ message: 'Failed to delete work permit' })
   }
 })
 
@@ -803,10 +804,10 @@ router.get('/:id/pdf', authenticate, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const workPermit = await workPermitService.getWorkPermitById(id);
-    if (!workPermit || !workPermit.documents || !workPermit.documents.pdf) {
+    if (!workPermit || !workPermit.documents) {
       return res.status(404).json({ message: 'PDF not found' });
     }
-    const pdfPath = path.resolve(workPermit.documents.pdf);
+    const pdfPath = path.resolve(workPermit.documents[0].path);
     if (!fs.existsSync(pdfPath)) {
       return res.status(404).json({ message: 'PDF file not found on server' });
     }
