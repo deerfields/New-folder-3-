@@ -40,7 +40,7 @@
   "author": "MallOS Enterprise Team",
   "license": "MIT",
   "dependencies": {
-    "@sentry/node": "^7.64.0",
+    "@sentry/node": "^9.0.0",
     "@tensorflow/tfjs": "^4.21.0",
     "@tensorflow/tfjs-node": "^4.21.0",
     "aedes": "^0.48.1",
