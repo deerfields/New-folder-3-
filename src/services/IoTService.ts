@@ -6,6 +6,7 @@
 import * as mqtt from 'mqtt';
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
+import { MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import * as crypto from 'crypto';
 import { logger } from '@/utils/logger';
 import { database } from '@/config/database';
@@ -47,7 +48,7 @@ export interface DeviceCommand {
 
 export class IoTService extends EventEmitter {
   private static instance: IoTService;
-  private mqttClient: mqtt.Client | null = null;
+  private mqttClient: mqtt.MqttClient | null = null;
   private deviceConnections: Map<string, any> = new Map();
   private deviceCertificates: Map<string, string> = new Map();
   private isInitialized = false;
@@ -431,11 +432,8 @@ export class IoTService extends EventEmitter {
     try {
       const where: any = { deviceId };
       if (sensorType) where.sensorType = sensorType;
-      if (startDate || endDate) {
-        where.timestamp = {};
-        if (startDate) where.timestamp.$gte = startDate;
-        if (endDate) where.timestamp.$lte = endDate;
-      }
+      if (startDate) where.timestamp = MoreThanOrEqual(startDate);
+      if (endDate) where.timestamp = LessThanOrEqual(endDate);
 
       return await database
         .getRepository(SensorData)
@@ -588,9 +586,7 @@ export class IoTService extends EventEmitter {
         .getRepository(SensorData)
         .count({
           where: {
-            timestamp: {
-              $gte: new Date(new Date().setHours(0, 0, 0, 0))
-            }
+            timestamp: MoreThanOrEqual(new Date(new Date().setHours(0, 0, 0, 0)))
           }
         });
 

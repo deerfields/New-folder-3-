@@ -1,17 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
-import { getRepository } from 'typeorm';
+import { database } from '@/config/database';
 import { AuditLog } from '../models/AuditLog';
+import { User } from '@/models/User';
 
 export async function auditLog(req: Request, res: Response, next: NextFunction) {
   const start = Date.now();
   res.on('finish', async () => {
     try {
-      const user = req.user || {};
+      const user = req.user as User;
       const log = new AuditLog();
-      log.userId = user.id;
-      log.userRole = user.role;
-      log.username = user.username;
-      log.tenantId = user.tenantId;
+      if (user) {
+        log.userId = user.id;
+        log.userRole = user.role;
+        log.username = user.username;
+        log.tenant = user.tenant;
+      }
       log.ipAddress = req.ip;
       log.userAgent = req.headers['user-agent'];
       log.requestId = req.headers['x-request-id'] as string;

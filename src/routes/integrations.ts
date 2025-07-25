@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
-import { getRepository } from 'typeorm';
+import { database } from '@/config/database';
 import { IntegrationConfig } from '../models/IntegrationConfig';
 import { SyncLog } from '../models/SyncLog';
 import { IntegrationError } from '../models/IntegrationError';
@@ -16,7 +16,7 @@ const router = Router();
 
 // --- Utility: Mask credentials in API responses ---
 function maskCredentials(config: IntegrationConfig) {
-  const { encryptedCredentials, accessToken, refreshToken, ...rest } = config;
+  const { credentials, accessToken, refreshToken, ...rest } = config;
   return { ...rest, credentials: '***MASKED***' };
 }
 
@@ -56,10 +56,10 @@ router.get(
     try {
       // Tenant-based filtering: only show integrations for user's tenant unless SuperAdmin
       const user = req.user;
-      const repo = getRepository(IntegrationConfig);
+      const repo = database.getRepository(IntegrationConfig);
       let qb = repo.createQueryBuilder('integration');
-      if (user.role !== 'SuperAdmin') {
-        qb = qb.andWhere('integration.tenantId = :tenantId', { tenantId: user.tenantId });
+      if (user.role !== 'super_admin') {
+        qb = qb.andWhere('integration.tenantId = :tenantId', { tenantId: user.tenant.id });
       }
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
@@ -97,10 +97,9 @@ router.post(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
-      const repo = getRepository(IntegrationConfig);
+      const repo = database.getRepository(IntegrationConfig);
       const { name, type, credentials } = req.body;
-      const config = repo.create({ name, type, status: 'disconnected' });
-      config.setCredentials(credentials);
+      const config = repo.create({ name, type, status: 'disconnected', credentials });
       await repo.save(config);
       res.status(201).json({ success: true, data: maskCredentials(config) });
       setAuditDetails(res, { action: 'create', resource: 'integration', resourceType: 'integration', newValues: req.body });
@@ -120,8 +119,8 @@ router.get(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
-      const repo = getRepository(IntegrationConfig);
-      const config = await repo.findOne(req.params.id, { relations: ['syncLogs', 'mappings', 'errors'] });
+      const repo = database.getRepository(IntegrationConfig);
+      const config = await repo.findOne({ where: { id: req.params.id }, relations: ['syncLogs', 'mappings', 'errors'] });
       if (!config) return res.status(404).json({ success: false, error: 'Integration not found' });
       res.json({ success: true, data: maskCredentials(config) });
       setAuditDetails(res, { action: 'read', resource: 'integration', resourceId: req.params.id, resourceType: 'integration' });
@@ -141,12 +140,12 @@ router.put(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
-      const repo = getRepository(IntegrationConfig);
-      const config = await repo.findOne(req.params.id);
+      const repo = database.getRepository(IntegrationConfig);
+      const config = await repo.findOne({ where: { id: req.params.id } });
       if (!config) return res.status(404).json({ success: false, error: 'Integration not found' });
       if (req.body.name) config.name = req.body.name;
       if (req.body.type) config.type = req.body.type;
-      if (req.body.credentials) config.setCredentials(req.body.credentials);
+      if (req.body.credentials) config.credentials = req.body.credentials;
       await repo.save(config);
       res.json({ success: true, data: maskCredentials(config) });
       setAuditDetails(res, { action: 'update', resource: 'integration', resourceId: req.params.id, resourceType: 'integration', newValues: req.body });
@@ -167,8 +166,8 @@ router.delete(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
-      const repo = getRepository(IntegrationConfig);
-      const config = await repo.findOne(req.params.id);
+      const repo = database.getRepository(IntegrationConfig);
+      const config = await repo.findOne({ where: { id: req.params.id } });
       if (!config) return res.status(404).json({ success: false, error: 'Integration not found' });
       await repo.remove(config);
       res.json({ success: true, message: 'Integration deleted' });

@@ -80,7 +80,7 @@ router.post('/upload', authenticate, upload.array('files', 5), async (req: Reque
         path: file.path,
         size: file.size,
         mimetype: file.mimetype,
-        uploadedBy: req.user.id,
+        uploadedBy: req.user?.id,
         uploadedAt: new Date(),
         metadata: {
           tenantId: req.body.tenantId,
@@ -93,7 +93,7 @@ router.post('/upload', authenticate, upload.array('files', 5), async (req: Reque
       uploadedFiles.push(fileInfo);
       
       // Log file upload
-      logger.info(`File uploaded: ${file.originalname} by ${req.user.id}`);
+      logger.info(`File uploaded: ${file.originalname} by ${req.user?.id}`);
     }
     
     return res.status(201).json({
@@ -127,7 +127,7 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
         filename: 'mock-file-1.pdf',
         size: 1024000,
         mimetype: 'application/pdf',
-        uploadedBy: req.user.id,
+        uploadedBy: req.user?.id,
         uploadedAt: new Date(),
         metadata: {
           tenantId: tenantId || null,
@@ -165,7 +165,7 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
       filename: 'mock-file-1.pdf',
       size: 1024000,
       mimetype: 'application/pdf',
-      uploadedBy: req.user.id,
+      uploadedBy: req.user?.id,
       uploadedAt: new Date(),
       metadata: {
         tenantId: null,
@@ -204,7 +204,7 @@ router.get('/:id/download', authenticate, async (req: Request, res: Response) =>
 });
 
 // Delete file
-router.delete('/:id', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGER]), async (req: Request, res: Response) => {
+router.delete('/:id', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     
@@ -213,7 +213,7 @@ router.delete('/:id', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MAN
     // 2. Delete physical file
     // 3. Remove database record
     
-    logger.info(`File deleted: ${id} by ${req.user.id}`);
+    logger.info(`File deleted: ${id} by ${req.user?.id}`);
     
     return res.json({ message: 'File deleted successfully' });
   } catch (err) {
@@ -223,7 +223,7 @@ router.delete('/:id', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MAN
 });
 
 // Get file statistics
-router.get('/stats/overview', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGER]), async (req: Request, res: Response) => {
+router.get('/stats/overview', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN]), async (req: Request, res: Response) => {
   try {
     // In a real implementation, you would fetch statistics from database
     const mockStats = {

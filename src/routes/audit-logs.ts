@@ -1,19 +1,18 @@
 import { Router } from 'express';
-import { getRepository, Between, Like } from 'typeorm';
+import { Between, Like } from 'typeorm';
 import { AuditLog } from '../models/AuditLog';
 import { authenticate } from '../middleware/auth';
 import { authorizeIntegration } from '../middleware/rbac';
 import { parse } from 'json2csv';
+import { database } from '@/config/database';
+import { UserRole } from '@/models/User';
 
 const router = Router();
-
-// RBAC: Only SuperAdmin and MallAdmin can access audit logs
-const adminRoles = ['SuperAdmin', 'MallAdmin'];
 
 // GET /api/audit-logs - List with filtering, pagination, search
 router.get('/', authenticate, authorizeIntegration('GET_/api/audit-logs'), async (req, res, next) => {
   try {
-    const repo = getRepository(AuditLog);
+    const repo = database.getRepository(AuditLog);
     const {
       userId, role, action, resource, resourceId, success, startDate, endDate, search, page = 1, limit = 25, exportType
     } = req.query;
@@ -57,7 +56,7 @@ router.get('/', authenticate, authorizeIntegration('GET_/api/audit-logs'), async
 // GET /api/audit-logs/stats - Audit statistics
 router.get('/stats', authenticate, authorizeIntegration('GET_/api/audit-logs'), async (req, res, next) => {
   try {
-    const repo = getRepository(AuditLog);
+    const repo = database.getRepository(AuditLog);
     const total = await repo.count();
     const byAction = await repo.createQueryBuilder('log')
       .select('log.action, COUNT(*) as count')
@@ -72,7 +71,7 @@ router.get('/stats', authenticate, authorizeIntegration('GET_/api/audit-logs'), 
 // DELETE /api/audit-logs/cleanup - Retention cleanup
 router.delete('/cleanup', authenticate, authorizeIntegration('DELETE_/api/audit-logs'), async (req, res, next) => {
   try {
-    const repo = getRepository(AuditLog);
+    const repo = database.getRepository(AuditLog);
     const { beforeDate } = req.body;
     if (!beforeDate) return res.status(400).json({ success: false, error: 'Missing beforeDate' });
     const result = await repo.createQueryBuilder()

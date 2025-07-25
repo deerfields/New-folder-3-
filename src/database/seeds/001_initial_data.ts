@@ -1,7 +1,7 @@
 import { DataSource } from 'typeorm'
 import { User, UserRole, UserStatus, UserType } from '@/models/User'
 import { Mall, MallType, MallClass, MallStatus } from '@/models/Mall'
-import { Tenant, TenantType, TenantCategory, TenantStatus } from '@/models/Tenant'
+import { Tenant, TenantType, TenantStatus } from '@/models/Tenant'
 import { WorkPermit, WorkPermitType, WorkPermitStatus, RiskLevel, WorkCategory } from '@/models/WorkPermit'
 import bcrypt from 'bcryptjs'
 import { config } from '@/config/config'
@@ -22,9 +22,9 @@ export class InitialData1700000000001 {
       email: 'admin@mallos.com',
       phoneNumber: '+971501234567',
       password: adminPassword,
-      role: UserRole.ADMIN,
+      role: UserRole.SUPER_ADMIN,
       status: UserStatus.ACTIVE,
-      type: UserType.REGULAR,
+      type: UserType.STAFF,
       emailVerifiedAt: new Date(),
       profile: {
         avatar: null,
@@ -66,9 +66,9 @@ export class InitialData1700000000001 {
       email: 'manager@mallos.com',
       phoneNumber: '+971502345678',
       password: managerPassword,
-      role: UserRole.MALL_MANAGER,
+      role: UserRole.MALL_ADMIN,
       status: UserStatus.ACTIVE,
-      type: UserType.REGULAR,
+      type: UserType.STAFF,
       emailVerifiedAt: new Date(),
       profile: {
         avatar: null,
@@ -231,7 +231,6 @@ export class InitialData1700000000001 {
         businessName: 'Fashion Forward',
         tradingName: 'Fashion Forward',
         type: TenantType.RETAIL,
-        category: TenantCategory.FASHION,
         status: TenantStatus.ACTIVE,
         contactEmail: 'info@fashionforward.com',
         contactPhone: '+971501234567',
@@ -269,8 +268,7 @@ export class InitialData1700000000001 {
         tenantCode: 'TNT-002',
         businessName: 'Café Delight',
         tradingName: 'Café Delight',
-        type: TenantType.F_B,
-        category: TenantCategory.FOOD,
+        type: TenantType.FOOD_AND_BEVERAGE,
         status: TenantStatus.ACTIVE,
         contactEmail: 'info@cafedelight.com',
         contactPhone: '+971502345678',
@@ -308,8 +306,7 @@ export class InitialData1700000000001 {
         tenantCode: 'TNT-003',
         businessName: 'Tech Solutions',
         tradingName: 'Tech Solutions',
-        type: TenantType.SERVICE,
-        category: TenantCategory.SERVICE,
+        type: TenantType.SERVICES,
         status: TenantStatus.PENDING_APPROVAL,
         contactEmail: 'info@techsolutions.com',
         contactPhone: '+971503456789',
@@ -348,7 +345,7 @@ export class InitialData1700000000001 {
     for (const tenantData of tenants) {
       const tenant = tenantRepository.create({
         ...tenantData,
-        mallId: mall.id,
+        mall: mall,
         compliance: {
           tradeLicense: 'Valid',
           insurance: 'Valid',
@@ -535,8 +532,8 @@ export class InitialData1700000000001 {
       password: tenantPassword,
       role: UserRole.TENANT_USER,
       status: UserStatus.ACTIVE,
-      type: UserType.REGULAR,
-      tenantId: (await tenantRepository.findOne({ where: { tenantCode: 'TNT-001' } }))!.id,
+      type: UserType.STAFF,
+      tenant: await tenantRepository.findOne({ where: { tenantCode: 'TNT-001' } }),
       emailVerifiedAt: new Date(),
       profile: {
         avatar: null,

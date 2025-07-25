@@ -1,4 +1,5 @@
-import { IntegrationService, IntegrationConfig } from './IntegrationService';
+import { IntegrationService } from './IntegrationService';
+import { IntegrationConfig } from '../../models/IntegrationConfig';
 
 export class OracleFinancialService extends IntegrationService {
   constructor(config: IntegrationConfig) {

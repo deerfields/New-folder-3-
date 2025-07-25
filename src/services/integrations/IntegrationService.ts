@@ -1,10 +1,10 @@
 import crypto from 'crypto';
 import axios, { AxiosRequestConfig } from 'axios';
-import { IntegrationConfig, IntegrationLog } from '../../models/IntegrationConfig';
+import { IntegrationConfig } from '../../models/IntegrationConfig';
 
 export abstract class IntegrationService {
   protected config: IntegrationConfig;
-  protected logs: IntegrationLog[] = [];
+  protected logs: any[] = [];
   protected rateLimit: { max: number; windowMs: number; calls: number[] } = { max: 60, windowMs: 60000, calls: [] };
 
   constructor(config: IntegrationConfig) {
@@ -38,7 +38,8 @@ export abstract class IntegrationService {
           client_id: options.clientId,
           client_secret: options.clientSecret,
         };
-      } else if (grantType === 'refresh_token') {
+      }
+      if (options.refreshToken) {
         data = {
           grant_type: 'refresh_token',
           refresh_token: options.refreshToken,
@@ -65,7 +66,7 @@ export abstract class IntegrationService {
       // Refresh token logic (assumes refresh token is present)
       const creds = this.getCredentials();
       if (!this.config.refreshToken) throw new Error('No refresh token available');
-      const tokenData = await this.authenticateOAuth2('refresh_token', {
+      const tokenData = await this.authenticateOAuth2('authorization_code', {
         tokenUrl: creds.tokenUrl,
         clientId: creds.clientId,
         clientSecret: creds.clientSecret,

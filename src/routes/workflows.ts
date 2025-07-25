@@ -13,7 +13,7 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
     const taskRepo = database.getRepository(TaskInstance);
     const workflow = workflowRepo.create({
       type,
-      createdBy: req.user.id,
+      createdBy: req.user?.id,
       data,
       status: WorkflowStatus.PENDING,
     });

@@ -9,6 +9,7 @@ import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import * as path from 'path';
+import { MoreThanOrEqual } from 'typeorm';
 import { logger } from '@/utils/logger';
 import { database } from '@/config/database';
 import { ComputerVision, VisionType, DetectionStatus, ThreatLevel } from '@/models/ComputerVision';
@@ -770,7 +771,7 @@ export class ComputerVisionService extends EventEmitter {
             confidence: detection.confidence,
             boundingBox: detection.boundingBox
           },
-          data: detection.data
+          rawData: detection.data
         });
 
         await database.getRepository(ComputerVision).save(computerVision);
@@ -913,9 +914,7 @@ export class ComputerVisionService extends EventEmitter {
       const totalDetections = await database.getRepository(ComputerVision).count();
       const todayDetections = await database.getRepository(ComputerVision).count({
         where: {
-          timestamp: {
-            $gte: new Date(new Date().setHours(0, 0, 0, 0))
-          }
+          timestamp: MoreThanOrEqual(new Date(new Date().setHours(0, 0, 0, 0)))
         }
       });
 

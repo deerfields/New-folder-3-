@@ -104,7 +104,7 @@ router.get('/overview', authenticate, async (req: Request, res: Response) => {
 });
 
 // Get financial overview
-router.get('/financial', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGER]), async (req: Request, res: Response) => {
+router.get('/financial', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN]), async (req: Request, res: Response) => {
   try {
     const financialRepo = database.getRepository(Financial);
     
@@ -150,7 +150,7 @@ router.get('/financial', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_
 });
 
 // Get analytics data
-router.get('/analytics', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGER]), async (req: Request, res: Response) => {
+router.get('/analytics', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN]), async (req: Request, res: Response) => {
   try {
     const analyticsRepo = database.getRepository(Analytics);
     const { mallId, type, startDate, endDate } = req.query;
@@ -194,7 +194,7 @@ router.get('/analytics', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_
 });
 
 // Get user activity summary
-router.get('/user-activity', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGER]), async (req: Request, res: Response) => {
+router.get('/user-activity', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN]), async (req: Request, res: Response) => {
   try {
     const userRepo = database.getRepository(User);
     
@@ -209,9 +209,9 @@ router.get('/user-activity', authenticate, authorize([UserRole.ADMIN, UserRole.M
     // Get recent logins
     const recentLogins = await userRepo
       .createQueryBuilder('user')
-      .select(['user.id', 'user.firstName', 'user.lastName', 'user.email', 'user.lastLogin'])
-      .where('user.lastLogin IS NOT NULL')
-      .orderBy('user.lastLogin', 'DESC')
+      .select(['user.id', 'user.firstName', 'user.lastName', 'user.email', 'user.lastLoginAt'])
+      .where('user.lastLoginAt IS NOT NULL')
+      .orderBy('user.lastLoginAt', 'DESC')
       .take(10)
       .getMany();
     
@@ -224,7 +224,7 @@ router.get('/user-activity', authenticate, authorize([UserRole.ADMIN, UserRole.M
         id: user.id,
         name: `${user.firstName} ${user.lastName}`,
         email: user.email,
-        lastLogin: user.lastLogin
+        lastLoginAt: user.lastLoginAt
       }))
     });
   } catch (err) {

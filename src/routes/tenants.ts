@@ -15,7 +15,7 @@ import { UserRole } from '@/models/User';
 const router = express.Router();
 
 // Get all tenants (with pagination and filtering)
-router.get('/', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGER]), async (req: Request, res: Response) => {
+router.get('/', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { page = 1, limit = 20, status, type, category, mallId, search } = req.query;
     const tenantRepo = database.getRepository(Tenant);
@@ -50,12 +50,12 @@ router.get('/', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGER])
         type: tenant.type,
         category: tenant.category,
         status: tenant.status,
-        mallId: tenant.mallId,
+        mallId: tenant.mall?.id,
         mallName: tenant.mall?.name,
-        contactEmail: tenant.contactEmail,
-        contactPhone: tenant.contactPhone,
-        leaseStartDate: tenant.leaseStartDate,
-        leaseEndDate: tenant.leaseEndDate,
+        contactEmail: tenant.email,
+        contactPhone: tenant.phoneNumber,
+        leaseStartDate: tenant.leaseDetails?.startDate,
+        leaseEndDate: tenant.leaseDetails?.endDate,
         createdAt: tenant.createdAt
       })),
       pagination: {
@@ -93,11 +93,11 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
       type: tenant.type,
       category: tenant.category,
       status: tenant.status,
-      mallId: tenant.mallId,
+      mallId: tenant.mall?.id,
       mall: tenant.mall,
-      contactEmail: tenant.contactEmail,
-      contactPhone: tenant.contactPhone,
-      contactFax: tenant.contactFax,
+      contactEmail: tenant.email,
+      contactPhone: tenant.phoneNumber,
+      contactFax: tenant.faxNumber,
       website: tenant.website,
       contactPerson: tenant.contactPerson,
       address: tenant.address,
@@ -150,21 +150,21 @@ router.post('/register', authenticate, async (req: Request, res: Response) => {
     
     // Check if tenant already exists
     const existing = await tenantRepo.findOne({ 
-      where: { businessName, mallId }
+      where: { businessName, mall: { id: mallId } }
     });
     if (existing) {
       return res.status(409).json({ message: 'Tenant already exists in this mall' });
     }
     
     const tenant = tenantRepo.create({
-      mallId,
+      mall,
       businessName,
       tradingName,
       type: type || TenantType.RETAIL,
-      category: category || BusinessCategory.GENERAL_RETAIL,
-      contactEmail,
-      contactPhone,
-      contactFax,
+      category: category || BusinessCategory.OTHER,
+      email: contactEmail,
+      phoneNumber: contactPhone,
+      faxNumber: contactFax,
       website,
       contactPerson,
       address,
@@ -188,7 +188,7 @@ router.post('/register', authenticate, async (req: Request, res: Response) => {
 });
 
 // Update tenant
-router.put('/:id', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGER]), async (req: Request, res: Response) => {
+router.put('/:id', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
@@ -203,7 +203,7 @@ router.put('/:id', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGE
     Object.assign(tenant, updateData);
     
     await tenantRepo.save(tenant);
-    logger.info(`Tenant updated: ${tenant.businessName} by ${req.user.id}`);
+    logger.info(`Tenant updated: ${tenant.businessName} by ${req.user?.id}`);
     
     return res.json({ message: 'Tenant updated successfully' });
   } catch (err) {
@@ -213,7 +213,7 @@ router.put('/:id', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGE
 });
 
 // Approve tenant
-router.post('/:id/approve', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGER]), async (req: Request, res: Response) => {
+router.post('/:id/approve', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const tenantRepo = database.getRepository(Tenant);
@@ -226,7 +226,7 @@ router.post('/:id/approve', authenticate, authorize([UserRole.ADMIN, UserRole.MA
     tenant.status = TenantStatus.ACTIVE;
     await tenantRepo.save(tenant);
     
-    logger.info(`Tenant approved: ${tenant.businessName} by ${req.user.id}`);
+    logger.info(`Tenant approved: ${tenant.businessName} by ${req.user?.id}`);
     return res.json({ message: 'Tenant approved successfully' });
   } catch (err) {
     logger.error('Approve tenant error', err);
@@ -235,7 +235,7 @@ router.post('/:id/approve', authenticate, authorize([UserRole.ADMIN, UserRole.MA
 });
 
 // Reject tenant
-router.post('/:id/reject', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGER]), async (req: Request, res: Response) => {
+router.post('/:id/reject', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { reason } = req.body;
@@ -246,11 +246,11 @@ router.post('/:id/reject', authenticate, authorize([UserRole.ADMIN, UserRole.MAL
       return res.status(404).json({ message: 'Tenant not found' });
     }
     
-    tenant.status = TenantStatus.REJECTED;
-    tenant.metadata = { ...tenant.metadata, rejectionReason: reason };
+    tenant.status = TenantStatus.INACTIVE;
+    tenant.metadata = { ...tenant.metadata, notes: reason };
     await tenantRepo.save(tenant);
     
-    logger.info(`Tenant rejected: ${tenant.businessName} by ${req.user.id}`);
+    logger.info(`Tenant rejected: ${tenant.businessName} by ${req.user?.id}`);
     return res.json({ message: 'Tenant rejected successfully' });
   } catch (err) {
     logger.error('Reject tenant error', err);
@@ -259,15 +259,15 @@ router.post('/:id/reject', authenticate, authorize([UserRole.ADMIN, UserRole.MAL
 });
 
 // Get tenant statistics
-router.get('/stats/overview', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGER]), async (req: Request, res: Response) => {
+router.get('/stats/overview', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN]), async (req: Request, res: Response) => {
   try {
     const tenantRepo = database.getRepository(Tenant);
     
-    const [totalTenants, activeTenants, pendingTenants, rejectedTenants] = await Promise.all([
+    const [totalTenants, activeTenants, pendingTenants, inactiveTenants] = await Promise.all([
       tenantRepo.count(),
       tenantRepo.count({ where: { status: TenantStatus.ACTIVE } }),
       tenantRepo.count({ where: { status: TenantStatus.PENDING_APPROVAL } }),
-      tenantRepo.count({ where: { status: TenantStatus.REJECTED } })
+      tenantRepo.count({ where: { status: TenantStatus.INACTIVE } })
     ]);
     
     const categoryStats = await tenantRepo
@@ -288,7 +288,7 @@ router.get('/stats/overview', authenticate, authorize([UserRole.ADMIN, UserRole.
       totalTenants,
       activeTenants,
       pendingTenants,
-      rejectedTenants,
+      inactiveTenants,
       categoryStats,
       typeStats
     });

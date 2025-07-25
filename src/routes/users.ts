@@ -14,7 +14,7 @@ import { authenticate, authorize } from '@/middleware/auth';
 const router = express.Router();
 
 // Get all users (with pagination and filtering)
-router.get('/', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGER]), async (req: Request, res: Response) => {
+router.get('/', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { page = 1, limit = 20, role, status, tenantId, search } = req.query;
     const userRepo = database.getRepository(User);
@@ -48,7 +48,7 @@ router.get('/', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGER])
         role: user.role,
         status: user.status,
         tenantId: user.tenantId,
-        lastLogin: user.lastLogin,
+        lastLoginAt: user.lastLoginAt,
         createdAt: user.createdAt
       })),
       pagination: {
@@ -76,7 +76,7 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
     }
     
     // Check if user has permission to view this user
-    if (req.user.role !== UserRole.ADMIN && req.user.id !== id) {
+    if (req.user.role !== UserRole.SUPER_ADMIN && req.user.id !== id) {
       return res.status(403).json({ message: 'Forbidden' });
     }
     
@@ -93,7 +93,7 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
       tenantId: user.tenantId,
       profile: user.profile,
       settings: user.settings,
-      lastLogin: user.lastLogin,
+      lastLoginAt: user.lastLoginAt,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt
     });
@@ -104,7 +104,7 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
 });
 
 // Create new user
-router.post('/', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGER]), async (req: Request, res: Response) => {
+router.post('/', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { firstName, lastName, email, username, password, phoneNumber, role, tenantId, type } = req.body;
     const userRepo = database.getRepository(User);
@@ -123,13 +123,13 @@ router.post('/', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGER]
       password: await AuthService.hashPassword(password),
       phoneNumber,
       role: role || UserRole.TENANT_USER,
-      type: type || UserType.REGULAR,
+      type: type || UserType.INTERNAL,
       tenantId,
       status: UserStatus.PENDING_VERIFICATION
     });
     
     await userRepo.save(user);
-    logger.info(`User created: ${user.email} by ${req.user.id}`);
+    logger.info(`User created: ${user.email} by ${req.user?.id}`);
     
     return res.status(201).json({
       message: 'User created successfully',
@@ -154,7 +154,7 @@ router.put('/:id', authenticate, async (req: Request, res: Response) => {
     }
     
     // Check permissions
-    if (req.user.role !== UserRole.ADMIN && req.user.id !== id) {
+    if (req.user.role !== UserRole.SUPER_ADMIN && req.user.id !== id) {
       return res.status(403).json({ message: 'Forbidden' });
     }
     
@@ -164,13 +164,13 @@ router.put('/:id', authenticate, async (req: Request, res: Response) => {
     if (email) user.email = email;
     if (username) user.username = username;
     if (phoneNumber) user.phoneNumber = phoneNumber;
-    if (role && req.user.role === UserRole.ADMIN) user.role = role;
-    if (status && req.user.role === UserRole.ADMIN) user.status = status;
+    if (role && req.user.role === UserRole.SUPER_ADMIN) user.role = role;
+    if (status && req.user.role === UserRole.SUPER_ADMIN) user.status = status;
     if (profile) user.profile = { ...user.profile, ...profile };
     if (settings) user.settings = { ...user.settings, ...settings };
     
     await userRepo.save(user);
-    logger.info(`User updated: ${user.email} by ${req.user.id}`);
+    logger.info(`User updated: ${user.email} by ${req.user?.id}`);
     
     return res.json({ message: 'User updated successfully' });
   } catch (err) {
@@ -180,7 +180,7 @@ router.put('/:id', authenticate, async (req: Request, res: Response) => {
 });
 
 // Delete user
-router.delete('/:id', authenticate, authorize([UserRole.ADMIN]), async (req: Request, res: Response) => {
+router.delete('/:id', authenticate, authorize([UserRole.SUPER_ADMIN]), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const userRepo = database.getRepository(User);
@@ -196,7 +196,7 @@ router.delete('/:id', authenticate, authorize([UserRole.ADMIN]), async (req: Req
     }
     
     await userRepo.remove(user);
-    logger.info(`User deleted: ${user.email} by ${req.user.id}`);
+    logger.info(`User deleted: ${user.email} by ${req.user?.id}`);
     
     return res.json({ message: 'User deleted successfully' });
   } catch (err) {
@@ -218,7 +218,7 @@ router.post('/:id/change-password', authenticate, async (req: Request, res: Resp
     }
     
     // Check permissions
-    if (req.user.role !== UserRole.ADMIN && req.user.id !== id) {
+    if (req.user.role !== UserRole.SUPER_ADMIN && req.user.id !== id) {
       return res.status(403).json({ message: 'Forbidden' });
     }
     
@@ -230,7 +230,7 @@ router.post('/:id/change-password', authenticate, async (req: Request, res: Resp
     user.password = await AuthService.hashPassword(newPassword);
     await userRepo.save(user);
     
-    logger.info(`Password changed for user: ${id} by ${req.user.id}`);
+    logger.info(`Password changed for user: ${id} by ${req.user?.id}`);
     return res.json({ message: 'Password changed successfully' });
   } catch (err) {
     logger.error('Change password error', err);
@@ -239,7 +239,7 @@ router.post('/:id/change-password', authenticate, async (req: Request, res: Resp
 });
 
 // Get user statistics
-router.get('/stats/overview', authenticate, authorize([UserRole.ADMIN, UserRole.MALL_MANAGER]), async (req: Request, res: Response) => {
+router.get('/stats/overview', authenticate, authorize([UserRole.SUPER_ADMIN, UserRole.MALL_ADMIN]), async (req: Request, res: Response) => {
   try {
     const userRepo = database.getRepository(User);
     

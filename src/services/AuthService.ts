@@ -19,7 +19,7 @@ export class AuthService {
     const payload = {
       sub: user.id,
       role: user.role,
-      tenantId: user.tenantId,
+      tenantId: user.tenant?.id,
       status: user.status,
     };
     return jwt.sign(payload, config.auth.jwtSecret, {
