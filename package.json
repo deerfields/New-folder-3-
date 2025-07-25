@@ -41,8 +41,8 @@
   "license": "MIT",
   "dependencies": {
     "@sentry/node": "^9.0.0",
-    "@tensorflow/tfjs": "^4.21.0",
-    "@tensorflow/tfjs-node": "^4.21.0",
+    "@tensorflow/tfjs": "^4.22.0",
+    "@tensorflow/tfjs-node": "^4.22.0",
     "aedes": "^0.48.1",
     "amqplib": "^0.10.3",
     "@apollo/server": "^5.0.2",
