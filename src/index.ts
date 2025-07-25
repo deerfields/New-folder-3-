@@ -85,9 +85,9 @@ class MallOSApplication {
       // await aiAnalyticsService.initialize();
       logger.info('⚠️ AI Analytics Service disabled for development');
 
-      // Initialize Computer Vision Service
-      await computerVisionService.initialize();
-      logger.info('✅ Computer Vision Service initialized');
+      // Initialize Computer Vision Service (disabled for development)
+      // await computerVisionService.initialize();
+      logger.info('⚠️ Computer Vision Service disabled for development');
 
       // Setup middleware
       this.setupMiddleware();
